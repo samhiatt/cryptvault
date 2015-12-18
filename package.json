@@ -1,0 +1,22 @@
+{
+  "name": "cryptvault",
+  "version": "1.0.0",
+  "description": "Encryption/decryption using Vault's transit secret backend ",
+  "main": "index.js",
+  "dependencies": {
+    "js-base64": "^2.1.9",
+    "node-vault": "^0.4.1",
+    "q": "^1.4.1",
+    "tsd": "^0.6.5",
+    "typescript": "^1.7.3"
+  },
+  "scripts": {
+    "postinstall": "node_modules/.bin/tsd install && node_modules/.bin/tsc",
+    "test": "node_modules/.bin/mocha"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "mocha": "^2.3.4"
+  }
+}
