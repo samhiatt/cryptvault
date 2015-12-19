@@ -27,22 +27,22 @@ export class CryptVault {
 		this._vault = node_vault({endpoint:vault_addr,token:vault_token});
 	}
 	initialized():Q.Promise<boolean>{
-		var deferred = Q.defer();
-		this._vault.initialized((err:Error,initialized:Initialized)=>{
-			if (err) deferred.reject(err);
-			else {
-				deferred.resolve(initialized.initialized);
-			}
+		return Q.Promise((resolve:(initialized:boolean)=>{},reject:(err:Error)=>{})=>{
+			this._vault.initialized((err:Error,initialized:Initialized)=>{
+				if (err) reject(err);
+				else {
+					resolve(initialized.initialized);
+				}
+			});
 		});
-		return deferred.promise;
 	}
 	status():Q.Promise<VaultStatus>{
-		var deferred = Q.defer();
-		this._vault.status((err:Error,status:VaultStatus)=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve(status);
+		return Q.Promise((resolve:(status:VaultStatus)=>{},reject:(err:Error)=>{})=>{
+			this._vault.status((err:Error,status:VaultStatus)=>{
+				if (err) reject(err);
+				else resolve(status);
+			});
 		});
-		return deferred.promise;
 	}
 	isSealed():Q.Promise<boolean>{
 		return this.status().then((status:VaultStatus)=>{
@@ -50,186 +50,186 @@ export class CryptVault {
 		});
 	}
 	mountTransit():Q.Promise<void>{
-		var deferred = Q.defer();
-		this._vault.mount({json:{mount_point:'transit',type:'transit'}},(err:Error)=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve();
+		return Q.Promise((resolve:()=>{},reject:(err:Error)=>{})=>{
+			this._vault.mount({json:{mount_point:'transit',type:'transit'}},(err:Error)=>{
+				if (err) reject(err);
+				else resolve();
+			});
 		});
-		return deferred.promise;
 	}
 	isTransitMounted():Q.Promise<boolean>{
-		var deferred = Q.defer();
-		this._vault.mounts((err:Error,resp:any)=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve(resp.hasOwnProperty('transit/'));
+		return Q.Promise((resolve:(transitMounted:boolean)=>{},reject:(err:Error)=>{})=>{
+			this._vault.mounts((err:Error,resp:any)=>{
+				if (err) reject(err);
+				else resolve(resp.hasOwnProperty('transit/'));
+			});
 		});
-		return deferred.promise;
 	}
 	enableAuth(authType:string, description:string="app-id/user-id based credentials"):Q.Promise<void>{
-		var deferred = Q.defer();
-		this._vault.enableAuth({
-			json:{
-				mount_point:authType, 
-				type:authType,
-				description: description
-			}
-		},(err:Error,resp:any,a:any)=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve();
+		return Q.Promise((resolve:()=>{},reject:(err:Error)=>{})=>{
+			this._vault.enableAuth({
+				json:{
+					mount_point:authType,
+					type:authType,
+					description: description
+				}
+			},(err:Error,resp:any,a:any)=>{
+				if (err) reject(err);
+				else resolve();
+			});
 		});
-		return deferred.promise;
 	}
 	disableAuth(authType:string):Q.Promise<void>{
-		var deferred = Q.defer();
-		var authOpts: DisableAuthOpts = {json:{mount_point:authType}};
-		this._vault.disableAuth(authOpts,(err:Error)=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve();
+		return Q.Promise((resolve:()=>{},reject:(err:Error)=>{})=>{
+			var authOpts: DisableAuthOpts = {json:{mount_point:authType}};
+			this._vault.disableAuth(authOpts,(err:Error)=>{
+				if (err) reject(err);
+				else resolve();
+			});
 		});
-		return deferred.promise;
 	}
 	auths():Q.Promise<AuthDict>{
-		var deferred = Q.defer();
-		this._vault.auths((err:Error, resp:AuthDict)=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve(resp);
+		return Q.Promise((resolve:(auth:AuthDict)=>{},reject:(err:Error)=>{})=>{
+			this._vault.auths((err:Error, resp:AuthDict)=>{
+				if (err) reject(err);
+				else resolve(resp);
+			});
 		});
-		return deferred.promise;
 	}
 	addPolicy(name:string,policy:PolicyOpts):Q.Promise<void>{
-		var deferred = Q.defer();
-		var policyOpts:AddPolicyOpts={
-			json:{
-				name: name,
-				rules:JSON.stringify(policy)
-			}
-		};
-		this._vault.addPolicy(policyOpts,(err:Error, resp:any)=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve(resp);
+		return Q.Promise((resolve:(resp:any)=>{},reject:(err:Error)=>{})=>{
+			var policyOpts:AddPolicyOpts={
+				json:{
+					name: name,
+					rules:JSON.stringify(policy)
+				}
+			};
+			this._vault.addPolicy(policyOpts,(err:Error, resp:any)=>{
+				if (err) reject(err);
+				else resolve(resp);
+			});
 		});
-		return deferred.promise;
 	}
 	removePolicy(name:string):Q.Promise<void>{
-		var deferred = Q.defer();
-		this._vault.removePolicy({json:{name:name}},(err:Error)=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve();
+		return Q.Promise((resolve:()=>{},reject:(err:Error)=>{})=>{
+			this._vault.removePolicy({json:{name:name}},(err:Error)=>{
+				if (err) reject(err);
+				else resolve();
+			});			
 		});
-		return deferred.promise;
 	}
 	policies():Q.Promise<any>{
-		var deferred = Q.defer();
-		this._vault.policies((err:Error, resp:{policies:string[]})=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve(resp.policies);
+		return Q.Promise((resolve:(policies:string[])=>{},reject:(err:Error)=>{})=>{
+			this._vault.policies((err:Error, resp:{policies:string[]})=>{
+				if (err) reject(err);
+				else resolve(resp.policies);
+			});
 		});
-		return deferred.promise;
 	}
 	createToken():Q.Promise<any>{
-		var deferred = Q.defer();
-		var self = this;
-		var opts = {policies:['default'],ttl:'1h',display_name:'default token'};
-		this._vault.write("auth/token/create", opts, (err:Error, resp:AuthResponse)=>{
-			if (err) deferred.reject(err);
-			deferred.resolve(resp.auth);
+		return Q.Promise((resolve:(auth:AuthObj)=>{},reject:(err:Error)=>{})=>{
+			var self = this;
+			var opts = {policies:['default'],ttl:'1h',display_name:'default token'};
+			this._vault.write("auth/token/create", opts, (err:Error, resp:AuthResponse)=>{
+				if (err) reject(err);
+				resolve(resp.auth);
+			});
 		});
-		return deferred.promise;
 	}
 	renewToken():Q.Promise<AuthObj>{
-		var deferred = Q.defer();
-		var self = this;
-		this._vault.write("auth/token/renew-self",{increment:3600},(err:Error,resp:AuthResponse)=>{
-			if (err) deferred.reject(err);
-			else {
-				//self._vault = new CryptVault(self._vault.endpoint,resp.auth.client_token)._vault;
-				self._vault.token = resp.auth.client_token;
-				deferred.resolve(resp.auth);
-			}
+		return Q.Promise((resolve:(auth:AuthObj)=>{},reject:(err:Error)=>{})=>{
+			var self = this;
+			this._vault.write("auth/token/renew-self",{increment:3600},(err:Error,resp:AuthResponse)=>{
+				if (err) reject(err);
+				else {
+					//self._vault = new CryptVault(self._vault.endpoint,resp.auth.client_token)._vault;
+					self._vault.token = resp.auth.client_token;
+					resolve(resp.auth);
+				}
+			});
 		});
-		return deferred.promise;
 	}
 	authorizeApp(appId:string,userId:string,cidrBlock:string="127.0.0.0/16",displayName:string=""):Q.Promise<any>{
-		var deferred = Q.defer();
-		var self = this;
-		this.auths().then((auths:AuthDict)=>{
-			if (auths.hasOwnProperty('app-id/')) {
-				var opts:AppIdAuthOpts = {
-					value: 'default',
-					display_name: displayName
-				};
-				self._vault.write("auth/app-id/map/app-id/"+appId, opts, (err:Error)=>{
-					if (err) deferred.reject(err);
-					var userOpts:AppUserIdAuthOpts = {
-						value: appId,
-						cidr_block: cidrBlock
+		return Q.Promise((resolve:()=>{},reject:(err:Error)=>{})=>{
+			var self = this;
+			this.auths().then((auths:AuthDict)=>{
+				if (auths.hasOwnProperty('app-id/')) {
+					var opts:AppIdAuthOpts = {
+						value: 'default',
+						display_name: displayName
 					};
-					self._vault.write("auth/app-id/map/user-id/"+userId, userOpts, (err:Error)=>{
-						if (err) deferred.reject(err);
-						else deferred.resolve();
+					self._vault.write("auth/app-id/map/app-id/"+appId, opts, (err:Error)=>{
+						if (err) reject(err);
+						var userOpts:AppUserIdAuthOpts = {
+							value: appId,
+							cidr_block: cidrBlock
+						};
+						self._vault.write("auth/app-id/map/user-id/"+userId, userOpts, (err:Error)=>{
+							if (err) reject(err);
+							else resolve();
+						});
 					});
-				});
-			} 
-			else deferred.reject(new Error("app-id backend not mounted."));
+				}
+				else reject(new Error("app-id backend not mounted."));
+			});
 		});
-		return deferred.promise;
 	}
 	authenticateApp(appId:string,userId:string):Q.Promise<AuthObj>{
-		var deferred = Q.defer();
-		this._vault.write("auth/app-id/login",{user_id:userId,app_id:appId},(err:Error,resp:AuthResponse)=>{
-			if (err) deferred.reject(err);
-			else {
-				this._vault = new CryptVault(this._vault.endpoint,resp.auth.client_token)._vault;
-				deferred.resolve(resp.auth);
-			}
+		return Q.Promise((resolve:(auth:AuthObj)=>{},reject:(err:Error)=>{})=>{
+			this._vault.write("auth/app-id/login",{user_id:userId,app_id:appId},(err:Error,resp:AuthResponse)=>{
+				if (err) reject(err);
+				else {
+					this._vault = new CryptVault(this._vault.endpoint,resp.auth.client_token)._vault;
+					resolve(resp.auth);
+				}
+			});
 		});
-		return deferred.promise;
 	}
 	lookupAuth():Q.Promise<AuthObj>{
-		var deferred = Q.defer();
-		this._vault.read("auth/token/lookup-self",{},(err:Error,resp:any)=>{
-			if (err) deferred.reject(err);
-			else deferred.resolve(resp.data);
+		return Q.Promise((resolve:(auth:AuthObj)=>{},reject:(err:Error)=>{})=>{
+			this._vault.read("auth/token/lookup-self",{},(err:Error,resp:any)=>{
+				if (err) reject(err);
+				else resolve(resp.data);
+			});
 		});
-		return deferred.promise;
 	}
 	createEncryptionKey(keyName:string):Q.Promise<any>{
-		var deferred = Q.defer();
-		this._vault.write('transit/keys/'+keyName,{value:true},(err:Error,result:CryptoResponse)=>{
-			if (err) deferred.reject(err);
-			else {
-				deferred.resolve(result);
-			}
+		return Q.Promise((resolve:(result:CryptoResponse)=>{},reject:(err:Error)=>{})=>{
+			this._vault.write('transit/keys/'+keyName,{value:true},(err:Error,result:CryptoResponse)=>{
+				if (err) reject(err);
+				else {
+					resolve(result);
+				}
+			});
 		});
-		return deferred.promise;
 	}
 	encrypt(keyName:string, plaintext:string):Q.Promise<string>{
-		var deferred = Q.defer();
-		this._vault.write(
-			'transit/encrypt/'+keyName,
-			{plaintext: Base64.encode(plaintext)},
-			(err:Error,result:EncryptResult)=>{
-				if (err) deferred.reject(err);
-				else {
-					deferred.resolve(result.data.ciphertext);
+		return Q.Promise((resolve:(cipherText:string)=>{},reject:(err:Error)=>{})=>{
+			this._vault.write(
+				'transit/encrypt/'+keyName,
+				{plaintext: Base64.encode(plaintext)},
+				(err:Error,result:EncryptResult)=>{
+					if (err) reject(err);
+					else {
+						resolve(result.data.ciphertext);
+					}
 				}
-			}
-		);
-		return deferred.promise;
+			);
+		});
 	}
 	decrypt(keyName:string, ciphertext:string):Q.Promise<string>{
-		var deferred = Q.defer();
-		this._vault.write(
-			'transit/decrypt/'+keyName,
-			{ciphertext:ciphertext},
-			(err:Error,result:DecryptResult)=>{
-				if (err) deferred.reject(err);
-				else {
-					deferred.resolve(Base64.decode(result.data.plaintext));
+		return Q.Promise((resolve:(plainText:string)=>{},reject:(err:Error)=>{})=>{
+			this._vault.write(
+				'transit/decrypt/'+keyName,
+				{ciphertext:ciphertext},
+				(err:Error,result:DecryptResult)=>{
+					if (err) reject(err);
+					else {
+						resolve(Base64.decode(result.data.plaintext));
+					}
 				}
-			}
-		);
-		return deferred.promise;
+			);
+		});
 	}
 }
 
@@ -258,57 +258,56 @@ export class VaultDevServer {
 		this.on = this._events.on;
 	}
 	start():Q.Promise<void>{
-		var deferred = Q.defer();
-		var self = this;
-		if (this._vaultProcess) {
-			if (self.state=='starting') self._events.once('started',()=>{
-				deferred.resolve();
+		return Q.Promise((resolve:()=>{},reject:(err:Error)=>{})=>{
+			var self = this;
+			if (this._vaultProcess) {
+				if (self.state=='starting') self._events.once('started',()=>{
+					resolve();
+				});
+				if (self.state=='running') resolve();
+			}
+			this.state='starting';
+			this._vaultProcess = cp.exec('vault server -dev');//, (err:Error,result:Buffer)=>{
+			this._vaultProcess.on('error',(err:Error)=>{
+				this._vaultProcess.kill("SIGTERM");
+				reject(err);
 			});
-			if (self.state=='running') deferred.resolve();
-			return deferred.promise;
-		}
-		this.state='starting';
-		this._vaultProcess = cp.exec('vault server -dev');//, (err:Error,result:Buffer)=>{
-		this._vaultProcess.on('error',(err:Error)=>{
-			this._vaultProcess.kill("SIGTERM");
-			deferred.reject(err);
+			this._vaultProcess.on('close',(exitCode:number)=>{
+				self.state = 'closed';
+				self._events.emit('close', exitCode);
+				if (exitCode!=0) {
+					//reject(new Error("Vault exited with code "+exitCode));
+					reject(new Error(this._stderr));
+				}
+			});
+			this._vaultProcess.stdout.on('data',(data:string)=>{
+				//console.log("dev server started",data);
+				self._events.emit('data',data);
+				var tokenMatch = /Root Token: (\S+)/.exec(data);
+				var unsealKeyMatch = /Unseal Key: (\S+)/.exec(data);
+				if (!tokenMatch || !unsealKeyMatch) {
+					if (!self._token) reject(new Error("Error parsing credentials from response."));
+				}
+				else {
+					self._token = tokenMatch[1];
+					self.vault = new CryptVault("http://127.0.0.1:8200", self._token);
+					// Wait for a second to make sure the port isn't in use
+					setTimeout(()=> {
+						self.vault.mountTransit().then(()=>{
+							self._events.emit('started');
+							self.state='running';
+							resolve();
+						}).catch((err:Error)=>{
+							reject(err);
+						});
+					}, 1000);
+				}
+			});
+			this._vaultProcess.stderr.on('data',(data:string)=>{
+				this._stderr += data;
+				//if (/bind: address already in use/.exec(data)) reject(new Error(data));
+			});
 		});
-		this._vaultProcess.on('close',(exitCode:number)=>{
-			self.state = 'closed';
-			self._events.emit('close', exitCode);
-			if (exitCode!=0) {
-				//deferred.reject(new Error("Vault exited with code "+exitCode));
-				deferred.reject(new Error(this._stderr));
-			}
-		});
-		this._vaultProcess.stdout.on('data',(data:string)=>{
-			//console.log("dev server started",data);
-			self._events.emit('data',data);
-			var tokenMatch = /Root Token: (\S+)/.exec(data);
-			var unsealKeyMatch = /Unseal Key: (\S+)/.exec(data);
-			if (!tokenMatch || !unsealKeyMatch) {
-				if (!self._token) deferred.reject(new Error("Error parsing credentials from response."));
-			}
-			else {
-				self._token = tokenMatch[1];
-				self.vault = new CryptVault("http://127.0.0.1:8200", self._token); 
-				// Wait for a second to make sure the port isn't in use
-				setTimeout(()=> {
-					self.vault.mountTransit().then(()=>{
-						self._events.emit('started');
-						self.state='running';
-						deferred.resolve();
-					}).catch((err:Error)=>{
-						deferred.reject(err);
-					});
-				}, 1000);
-			}
-		});
-		this._vaultProcess.stderr.on('data',(data:string)=>{
-			this._stderr += data;
-			//if (/bind: address already in use/.exec(data)) deferred.reject(new Error(data));
-		});
-		return deferred.promise;
 	}
 	shutdown():void{
 		this._vaultProcess.kill("SIGTERM");
