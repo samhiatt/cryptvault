@@ -10,7 +10,7 @@ import {EventEmitter} from "events";
 import {Vault, VaultStatus, Initialized, VaultAuth, AuthDict, DisableAuthOpts, AppIdAuthOpts, AppUserIdAuthOpts, 
 	PolicyOpts, AddPolicyOpts, AuthObj, AuthResponse, VaultOpts, EnableAuthOpts, RemovePolicyOpts, PoliciesResponse,
 	CreateTokenOpts, RenewTokenOpts, DecryptOpts, EncryptOpts, CreateEncryptionKeyOpts, LookupAuthResponse, 
-	AuthenticateAppOpts} from "./vault";
+	AuthenticateAppOpts, InitOpts, InitResponse, UnsealOpts, UnsealResponse} from "./vault";
 import {GetPolicyOpts} from "./vault";
 
 export class CryptVault {
@@ -20,6 +20,22 @@ export class CryptVault {
 		vault_token:string=process.env['VAULT_TOKEN']
 	){
 		this._vault = node_vault({endpoint:vault_addr,token:vault_token});
+	}
+	init(opts:InitOpts={secret_shares:5,secret_threshold:3}):Q.Promise<InitResponse>{
+		return Q.nbind(this._vault.init,this._vault)({json:opts}).then((resp:any)=>{
+			return resp;
+		});
+	}
+	initSync(opts?:InitOpts):InitResponse{
+		return deasync(callback => this.init().nodeify(callback))();
+	}
+	unseal(key:string,reset:boolean=false):Q.Promise<UnsealResponse>{
+		return Q.nbind(this._vault.unseal,this._vault)({json:{key:key,reset:reset}}).then((resp:any)=>{
+			return resp;
+		});
+	}
+	unsealSync(key:string,reset:boolean=false):UnsealResponse{
+		return deasync(callback => this.unseal(key,reset).nodeify(callback))();
 	}
 	isInitialized():Q.Promise<boolean>{
 		return Q.nbind(this._vault.initialized,this._vault)().then((resp:any)=>resp.initialized);

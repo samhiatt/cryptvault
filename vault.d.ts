@@ -8,6 +8,23 @@ export interface CryptoResponse {
 	warnings: any;
 	auth: any;
 }
+export interface InitOpts {
+	secret_shares:number;
+	secret_threshold:number;
+}
+export interface InitResponse {
+	keys: string[];
+}
+export interface UnsealOpts {
+	key:string;
+	reset?:boolean;
+}
+export interface UnsealResponse { 
+	sealed: boolean; 
+	t: number; 
+	n: number; 
+	progress: number;
+}
 export interface EncryptResult extends CryptoResponse {
 	data: { ciphertext: string };
 }
@@ -125,7 +142,7 @@ export interface Vault {
 	delete(path:string, opts:any, callback:(error:Error,response:any)=>any):void;
 	status(callback:(error:Error,response:any,status:VaultStatus)=>any):void;
 	initialized(callback:(error:Error,response:Initialized)=>any):void;
-	init(callback:(error:Error,response:any)=>any):void;
+	init(opts:{json:InitOpts},callback:(error:Error,response:InitResponse)=>any):void;
 	seal(callback:(error:Error,response:any)=>any):void;
 	unseal(callback:(error:Error,response:any)=>any):void;
 	mounts(callback:(error:Error,response:any)=>any):void;
