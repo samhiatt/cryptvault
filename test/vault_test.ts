@@ -59,7 +59,7 @@ describe('VaultDevServer', ()=> {
 		.then(()=>{
 			return vault.authorizeApp('foobarbaz','foouser');
 		})
-		.then(()=>{
+		.then(()=>{ // test authentication
 			var appVault:CryptVault = new cryptvault.CryptVault();
 			return appVault.authenticateApp('foobarbaz','foouser').then((resp:AuthObj)=>{
 				return expect(appVault.lookupAuth().then((auth:any)=>auth.id))

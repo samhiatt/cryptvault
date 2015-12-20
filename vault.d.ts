@@ -46,8 +46,31 @@ export interface DisableAuthOpts {
 		mount_point:string;
 	}
 }
+export interface CreateTokenOpts {
+	policies:string[];
+	ttl:string;
+	display_name:string;
+}
+export interface RenewTokenOpts {
+	increment:number;
+}
 export interface PolicyOpts {
 	path: {[pathName:string]:{policy:string}};
+}
+export interface PoliciesResponse {
+	policies: string[];
+}
+export interface DecryptOpts {
+	ciphertext: string;
+}
+export interface EncryptOpts {
+	plaintext: string;
+}
+export interface LookupAuthResponse {
+	data: any;
+}
+export interface CreateEncryptionKeyOpts {
+	value:boolean;
 }
 export interface AddPolicyOpts {
 	json: {
@@ -66,6 +89,10 @@ export interface AuthObj {
 	metadata:any;
 	policies:string[];
 	renewable:boolean;
+}
+export interface AuthenticateAppOpts {
+	user_id:string;
+	app_id:string;
 }
 export interface AuthResponse {
 	auth: AuthObj
