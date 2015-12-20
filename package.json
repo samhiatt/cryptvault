@@ -4,6 +4,7 @@
   "description": "Encryption/decryption using Vault's transit secret backend ",
   "main": "index.js",
   "dependencies": {
+    "deasync": "^0.1.4",
     "js-base64": "^2.1.9",
     "node-vault": "^0.4.1",
     "q": "^1.4.1",

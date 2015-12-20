@@ -83,6 +83,11 @@ export interface RemovePolicyOpts {
 		name:string;
 	}
 }
+export interface GetPolicyOpts {
+	json: {
+		name:string;
+	}
+}
 export interface AuthObj {
 	client_token:string;
 	lease_duration:number;
@@ -128,6 +133,7 @@ export interface Vault {
 	//unmount(mount_point:string, callback:(error:Error,response:any)=>any):void;
 	//remount(callback:(error:Error,response:any)=>any):any;
 	addPolicy(opts:AddPolicyOpts,callback:(error:Error,response:any)=>any):void;
+	//getPolicy(opts:AddPolicyOpts,callback:(error:Error,response:any)=>any):void;
 	removePolicy(opts:RemovePolicyOpts, callback:(error:Error)=>void):void;
 	policies(callback:(error:Error,response:any)=>void):void;
 	auths(callback:(error:Error,response:AuthDict)=>void):void;

@@ -12,6 +12,8 @@ import chaiAsPromised = require("chai-as-promised");
 import ExpectStatic = Chai.ExpectStatic;
 import {AuthDict} from "../vault";
 import {AuthObj} from "../vault";
+import {AddPolicyOpts} from "../vault";
+import {PolicyOpts} from "../vault";
 var expect:ExpectStatic = chai.expect;
 chai.use(chaiAsPromised);
 
@@ -34,10 +36,13 @@ describe('VaultDevServer', ()=> {
 		return expect(vault.isSealed()).to.eventually.be.false;
 	});
 	it('is initialized', ()=> {
-		return expect(vault.initialized()).to.eventually.be.true;
+		return expect(vault.isInitialized()).to.eventually.be.true;
 	});
 	it('has transit mounted', ()=>{
 		return expect(vault.isTransitMounted()).to.eventually.be.true;
+	});
+	it('tries to mount transit after already being mounted', ()=>{
+		return expect(vault.mountTransit()).to.eventually.be.false;
 	});
 	it('gets status', (done)=>{
 		vault.status().then((status:VaultStatus)=>{
@@ -84,7 +89,7 @@ describe('VaultDevServer', ()=> {
 		});
 	});
 	it('adds new policy named foo, then checks that it is returned by policies(), then removes it',()=>{
-		return vault.addPolicy('foo',{path:{
+		return vault.writePolicy('foo',{path:{
 			'transit/keys/foo':{policy:'read'},
 			'secret/*':{policy:'write'}
 		}})
@@ -136,6 +141,91 @@ describe('VaultDevServer', ()=> {
 			});
 		})
 		.catch(done);
+	});
+	describe('tests synchronous functions',()=>{
+		it('tests statusSync()',()=>{
+			return expect(vault['statusSync']().sealed).to.be.false;
+		});
+		it('tests isSealedSync()',()=>{
+			return expect(vault['isSealedSync']()).to.be.false;
+		});
+		it('tests isInitializedSync()', ()=> {
+			return expect(vault['isInitializedSync']()).to.be.true;
+		});
+		it('tests mountTransitSync()',()=>{
+			return expect(vault.mountTransitSync()).to.be.a('boolean');
+		});
+		it('tests isTransitMountedSync()',()=>{
+			return expect(vault.isTransitMountedSync()).to.be.true;
+		});
+		it('tests enableAuthSync("github"), then checks result with authsSync()',()=>{
+			expect(vault.enableAuthSync('github')).to.be.true;
+			var auths = vault.authsSync();
+			expect(auths['github/'].type).to.be.equal('github');
+		});
+		it('tests enableAuthSync("github") after already being enabled, then checks result with authsSync().',()=>{
+			var auths = vault.authsSync();
+			expect(auths['github/'].type).to.be.equal('github');
+			expect(vault.enableAuthSync('github')).to.be.false;
+		});
+		it('tests disableAuthSync("github") after already being enabled, then checks result with authsSync().',()=>{
+			var auths = vault.authsSync();
+			expect(auths['github/']).to.be.an('object');
+			var disableResult = vault.disableAuthSync('github');
+			expect(disableResult).to.be.true;
+			auths = vault.authsSync();
+			expect(auths['github/']).to.be.undefined;
+			expect(vault.disableAuthSync('github')).to.be.false;
+		});
+		it('tests addPolicySync(...), policiesSync(), getPolicySync(name), and removePoliciesSync(...)',()=>{
+			var policy:PolicyOpts = {path:{
+				'transit/keys/foo':{policy:'read'},
+				'secret/*':{policy:'write'}
+			}};
+			var result:any = vault.writePolicySync('foo',policy);
+			expect(result).to.be.undefined;
+			console.log(vault.getPolicySync('foo'));
+			var policies = vault.policiesSync();
+			expect(policies).to.contain('foo');
+			policy.path['*']={policy:'deny'};
+			result = vault.writePolicySync('foo',policy);
+			expect(result).to.be.undefined;
+			console.log(vault.getPolicySync('foo'));
+			result = vault.getPolicySync('foo');
+			expect(result.rules).to.be.a('string');
+			console.log(result);
+			result = vault.removePolicySync('foo');
+			expect(result).to.be.undefined;
+			policies = vault.policiesSync();
+			expect(policies).to.not.contain('foo');
+		});
+		// TODO: Test that policies are enforced
+		it('tests async encryption functions',()=>{
+			var response = vault.createEncryptionKeySync('bar');
+			console.log("Create encryption key response:", response);
+			var key = vault.getEncryptionKeySync('bar');
+			console.log("Get encryption key response:", key);
+			var cipherText = vault.encryptSync('bar',testString);
+			console.log("Encrypted:", cipherText);
+			expect(cipherText).to.be.a('string');
+			var decrypted = vault.decryptSync('bar', cipherText);
+			console.log("Decrypted:", decrypted);
+			expect(decrypted).to.be.equal(testString);
+		});
+		it('tests lookupAuthSync()',()=>{
+			var auth = vault.lookupAuthSync();
+			console.log("AUTH:", auth);
+			expect(auth.id).to.be.a('string');
+			expect(auth.id).to.be.equal(vault['_vault'].token);
+		});
+		it('tests authorizeAppSync(...) and authenticateAppSync(...)',()=>{
+			vault.enableAuthSync('app-id');
+			vault.authorizeAppSync("fooapp","foouser");
+			var auth = vault.authenticateAppSync("fooapp","foouser");
+			console.log("AUTH:", auth);
+			expect(auth.client_token).to.be.a('string');
+			expect(auth.lease_duration).to.be.a('number');
+		});
 	});
 	after('shutdown dev server',()=>{
 		vaultServer.shutdown();
