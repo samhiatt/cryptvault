@@ -13,6 +13,7 @@
     "uuid": "^2.0.1"
   },
   "scripts": {
+    "install":"cd bin && if uname -a | grep Linux; then unzip -f vault_0.4.0_linux_amd64.zip; elif uname -a | grep Darwin; then unzip -f vault_0.4.0_darwin_amd64.zip; fi && cd .. ",
     "postinstall": "node_modules/.bin/tsd install && node_modules/.bin/tsc",
     "test": "node_modules/.bin/mocha"
   },

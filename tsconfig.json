@@ -11,6 +11,7 @@
     ".c9"
   ],
   "references": [
-    "./index.ts"
+    "./index.ts",
+    "typings/tsd.d.ts"
   ]
 }
