@@ -1,4 +1,4 @@
-import {EncryptResult,DecryptResult,CryptoResponse} from "./vault";
+import {EncryptResult,DecryptResult} from "./vault";
 var Base64 = require('js-base64').Base64;
 var Q = require('q');
 import cp = require('child_process');
@@ -7,11 +7,10 @@ var deasync = require('deasync');
 
 import {error} from "util";
 import {EventEmitter} from "events";
-import {Vault, VaultStatus, Initialized, VaultAuth, AuthDict, DisableAuthOpts, AppIdAuthOpts, AppUserIdAuthOpts, 
-	PolicyOpts, AddPolicyOpts, AuthObj, AuthResponse, VaultOpts, EnableAuthOpts, RemovePolicyOpts, PoliciesResponse,
+import {Vault, VaultStatus, Initialized, MountOpts, VaultAuth, AuthDict, DisableAuthOpts, AppIdAuthOpts, AppUserIdAuthOpts, 
+	PolicyDict, AddPolicyOpts, AuthObj, AuthResponse, EnableAuthOpts, PoliciesResponse,
 	CreateTokenOpts, RenewTokenOpts, DecryptOpts, EncryptOpts, CreateEncryptionKeyOpts, LookupAuthResponse, 
 	AuthenticateAppOpts, InitOpts, InitResponse, UnsealOpts, UnsealResponse} from "./vault";
-import {GetPolicyOpts} from "./vault";
 
 export class CryptVault {
 	protected _vault:Vault;
@@ -59,8 +58,8 @@ export class CryptVault {
 	 * Resolves to true if new mount point created, false if already mounted. 
 	 */
 	mountTransit():Q.Promise<boolean>{
-		var mountOpts:VaultOpts = {json:{mount_point:'transit',type:'transit'}};
-		return Q.nbind(this._vault.mount,this._vault)(mountOpts)
+		var mountOpts:MountOpts = {mount_point:'transit',type:'transit'};
+		return Q.nbind(this._vault.mount,this._vault)({json:mountOpts})
 			.then(()=>true)
 			.catch((err:Error)=>{
 				if (err.message.indexOf("existing mount at")>-1) return false; // already mounted, success
@@ -80,12 +79,12 @@ export class CryptVault {
 	 * Resolves to true if new auth type created, false if auth type already exists.
 	 */
 	enableAuth(authType:string, description:string=authType+" based credentials"):Q.Promise<boolean>{
-		var authOpts:EnableAuthOpts = {json:{
+		var authOpts:EnableAuthOpts = {
 			mount_point:authType,
 			type:authType,
 			description: description
-		}};
-		return Q.nbind(this._vault.enableAuth, this._vault)(authOpts)
+		};
+		return Q.nbind(this._vault.enableAuth, this._vault)({json:authOpts})
 			.then(()=>true)
 			.catch((err:Error)=>{
 				if (err.message.indexOf("path is already in use")>-1) return false; // already enabled, success
@@ -101,9 +100,9 @@ export class CryptVault {
 	/*
 	 * Resolves to true if existing auth disabled, false if no auth type found at mount point. 
 	 */
-	disableAuth(authType:string):Q.Promise<boolean>{
-		var authOpts:DisableAuthOpts = {json:{mount_point:authType}};
-		return Q.nbind(this._vault.disableAuth,this._vault)(authOpts)
+	disableAuth(mountPoint:string,type?:string):Q.Promise<boolean>{
+		var authOpts:MountOpts = {mount_point:mountPoint,type:type||mountPoint};
+		return Q.nbind(this._vault.disableAuth,this._vault)({json:authOpts})
 			.then(()=>true)
 			.catch((err:Error)=>{
 				if (err.message.indexOf("no matching backend")>-1) return false; // already disabled, success
@@ -128,30 +127,28 @@ export class CryptVault {
 	authsSync():AuthDict{
 		return deasync(callback => this.auths().nodeify(callback))();
 	}
-	getPolicy(name:string):Q.Promise<any>{
-		var policyOpts:GetPolicyOpts = {json:{ name: name }};
+	getPolicy(name:string):Q.Promise<PolicyDict>{
 		return Q.nbind(this._vault.read,this._vault)("/sys/policy/"+name);
 	}
-	getPolicySync(name:string):any{
+	getPolicySync(name:string):PolicyDict{
 		return deasync(callback => this.getPolicy(name).nodeify(callback))();
 	}
-	writePolicy(name:string, policy:PolicyOpts):Q.Promise<void>{
-		var policyOpts:AddPolicyOpts = {json:{
+	writePolicy(name:string, policy:PolicyDict):Q.Promise<void>{
+		var policyOpts:AddPolicyOpts = {
 			name: name,
 			rules:JSON.stringify(policy)
-		}};
-		return Q.nbind(this._vault.addPolicy,this._vault)(policyOpts)
+		};
+		return Q.nbind(this._vault.addPolicy,this._vault)({json:policyOpts})
 			.catch((err:Error)=>{
 			console.log(err);
 			throw err;
 		});
 	}
-	writePolicySync(name:string, policy:PolicyOpts):void{
+	writePolicySync(name:string, policy:PolicyDict):void{
 		return deasync(callback => this.writePolicy(name,policy).nodeify(callback))();
 	}
 	removePolicy(name:string):Q.Promise<void>{
-		var policyOpts:RemovePolicyOpts = {json:{ name: name }};
-		return Q.nbind(this._vault.removePolicy,this._vault)(policyOpts);
+		return Q.nbind(this._vault.removePolicy,this._vault)({json:{name:name}});
 	}
 	removePolicySync(name:string):void{
 		return deasync(callback => this.removePolicy(name).nodeify(callback))();

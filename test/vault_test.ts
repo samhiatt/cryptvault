@@ -13,7 +13,7 @@ import ExpectStatic = Chai.ExpectStatic;
 import {AuthDict} from "../vault";
 import {AuthObj} from "../vault";
 import {AddPolicyOpts} from "../vault";
-import {PolicyOpts} from "../vault";
+import {PolicyDict} from "../vault";
 var expect:ExpectStatic = chai.expect;
 chai.use(chaiAsPromised);
 
@@ -59,7 +59,7 @@ describe('VaultDevServer', ()=> {
 			});
 		});
 	});
-	it ('enables auth/app-id and then gets it from auths()', ()=>{;
+	it ('enables auth/app-id and then gets it from auths()', ()=>{
 		return vault.enableAuth('app-id')
 		.then(()=>{
 			return vault.authorizeApp('foobarbaz','foouser');
@@ -89,10 +89,10 @@ describe('VaultDevServer', ()=> {
 		});
 	});
 	it('adds new policy named foo, then checks that it is returned by policies(), then removes it',()=>{
-		return vault.writePolicy('foo',{path:{
+		return vault.writePolicy('foo',{
 			'transit/keys/foo':{policy:'read'},
 			'secret/*':{policy:'write'}
-		}})
+		})
 		.then(()=> {
 			return vault.policies().then((policies:any)=> {
 				console.log("policies:", policies);
@@ -158,6 +158,15 @@ describe('VaultDevServer', ()=> {
 		it('tests isTransitMountedSync()',()=>{
 			return expect(vault.isTransitMountedSync()).to.be.true;
 		});
+		it('tests get and write policies',()=>{
+			console.log("Write policy:",vault.writePolicySync('foo',{
+				'*':{policy:'deny'},
+				'/mount/transit/foo':{policy:"write"}
+			}));
+			console.log("foo policy:",vault.getPolicySync('foo'));
+			var token = vault.createTokenSync({policies:['foo']});
+			console.log("TOKEN:",token);
+		});
 		it('tests enableAuthSync("github"), then checks result with authsSync()',()=>{
 			expect(vault.enableAuthSync('github')).to.be.true;
 			var auths = vault.authsSync();
@@ -178,16 +187,16 @@ describe('VaultDevServer', ()=> {
 			expect(vault.disableAuthSync('github')).to.be.false;
 		});
 		it('tests addPolicySync(...), policiesSync(), getPolicySync(name), and removePoliciesSync(...)',()=>{
-			var policy:PolicyOpts = {path:{
+			var policy:PolicyDict = {
 				'transit/keys/foo':{policy:'read'},
 				'secret/*':{policy:'write'}
-			}};
+			};
 			var result:any = vault.writePolicySync('foo',policy);
 			expect(result).to.be.undefined;
 			console.log(vault.getPolicySync('foo'));
 			var policies = vault.policiesSync();
 			expect(policies).to.contain('foo');
-			policy.path['*']={policy:'deny'};
+			policy['*']={policy:'deny'};
 			result = vault.writePolicySync('foo',policy);
 			expect(result).to.be.undefined;
 			console.log(vault.getPolicySync('foo'));

@@ -1,6 +1,6 @@
 import cv = require('./index');
 import {Vault, VaultStatus, Initialized, VaultAuth, AuthDict, DisableAuthOpts, AppIdAuthOpts, AppUserIdAuthOpts, 
-	PolicyOpts, AddPolicyOpts, AuthObj, AuthResponse, VaultOpts, EnableAuthOpts, RemovePolicyOpts, PoliciesResponse,
+	PolicyOpts, AddPolicyOpts, AuthObj, AuthResponse, EnableAuthOpts, PoliciesResponse,
 	CreateTokenOpts, RenewTokenOpts, DecryptOpts, EncryptOpts, CreateEncryptionKeyOpts, LookupAuthResponse, 
 	AuthenticateAppOpts, InitOpts, InitResponse} from "./vault";
 
