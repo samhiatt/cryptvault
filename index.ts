@@ -129,6 +129,7 @@ export class VaultDevServer {
 	state:string='closed';
 	onClose:()=>void;
 	constructor(){
+		process.on('exit',()=> this.shutdown() );
 		this._events.on('close',(data:any)=>{
 			//console.log("close event fired with data:",data);
 			if (typeof this.onClose == 'function') this.onClose();
