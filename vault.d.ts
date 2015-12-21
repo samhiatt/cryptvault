@@ -85,13 +85,30 @@ export interface DecryptOpts {
 export interface EncryptOpts {
 	plaintext: string;
 }
+export interface TokenObj {
+	creation_time:number
+	display_name:string;
+	id:string;
+	meta:any;
+	num_uses:number;
+	orphan:boolean;
+	path:string;
+	policies:string[];
+	ttl:number;
+}
 export interface LookupAuthResponse {
-	data: any;
+	data: TokenObj;
 }
 export interface CreateEncryptionKeyOpts {
 	value:boolean;
 }
-export interface PolicyDict {[pathName:string]:{policy:string}}
+export interface PolicyRules {
+	path:{[pathName:string]:{policy:string}}
+}
+export interface PolicyObject {
+	name:string;
+	rules: string|PolicyRules;
+}
 export interface PolicyOpts {
 	rules?: string;
 	name:string;

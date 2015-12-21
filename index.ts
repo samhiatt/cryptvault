@@ -7,11 +7,13 @@ var deasync = require('deasync');
 
 import {error} from "util";
 import {EventEmitter} from "events";
-import {Vault, VaultStatus, Initialized, MountOpts, VaultAuth, AuthDict, DisableAuthOpts, AppIdAuthOpts, AppUserIdAuthOpts, 
-	PolicyDict, AddPolicyOpts, AuthObj, AuthResponse, EnableAuthOpts, PoliciesResponse,
+import {Vault, VaultStatus, Initialized, MountOpts, VaultAuth, AuthDict, DisableAuthOpts, AppIdAuthOpts, 
+	PolicyRules, PolicyObject, AddPolicyOpts, AuthObj, AuthResponse, EnableAuthOpts, PoliciesResponse, AppUserIdAuthOpts,
 	CreateTokenOpts, RenewTokenOpts, DecryptOpts, EncryptOpts, CreateEncryptionKeyOpts, LookupAuthResponse, 
 	AuthenticateAppOpts, InitOpts, InitResponse, UnsealOpts, UnsealResponse} from "./vault";
 import {EncryptKey} from "./vault";
+import {TokenObj} from "./vault";
+import {TokenObj} from "./vault";
 
 export class CryptVault {
 	protected _vault:Vault;
@@ -128,24 +130,24 @@ export class CryptVault {
 	authsSync():AuthDict{
 		return deasync(callback => this.auths().nodeify(callback))();
 	}
-	getPolicy(name:string):Q.Promise<PolicyDict>{
+	getPolicy(name:string):Q.Promise<PolicyObject>{
 		return Q.nbind(this._vault.read,this._vault)("sys/policy/"+name);
 	}
-	getPolicySync(name:string):PolicyDict{
+	getPolicySync(name:string):PolicyObject{
 		return deasync(callback => this.getPolicy(name).nodeify(callback))();
 	}
-	writePolicy(name:string, policy:PolicyDict|string):Q.Promise<void>{
+	writePolicy(name:string, policy:PolicyRules|string):Q.Promise<void>{
 		var policyOpts:any = {
 			name: name,
-			rules:(typeof policy == 'string')? policy : JSON.stringify({path:policy}) 
+			rules:(typeof policy == 'string')? policy : JSON.stringify(policy) 
 		};
 		return Q.nbind(this._vault.addPolicy,this._vault)({json:policyOpts})
 			.catch((err:Error)=>{
-			console.log(err);
-			throw err;
-		});
+				console.log(err);
+				throw err;
+			});
 	}
-	writePolicySync(name:string, policy:PolicyDict|string):void{
+	writePolicySync(name:string, policy:PolicyRules|string):void{
 		return deasync(callback => this.writePolicy(name,policy).nodeify(callback))();
 	}
 	removePolicy(name:string):Q.Promise<void>{
@@ -206,11 +208,11 @@ export class CryptVault {
 	authenticateAppSync(appId:string,userId:string):any{
 		return deasync(callback => this.authenticateApp(appId,userId).nodeify(callback))();
 	}
-	lookupAuth():Q.Promise<AuthObj>{
+	lookupAuth():Q.Promise<TokenObj>{
 		return Q.nbind(this._vault.read,this._vault)('auth/token/lookup-self',{})
 			.then((result:LookupAuthResponse)=>result.data);
 	}
-	lookupAuthSync():AuthObj{
+	lookupAuthSync():TokenObj{
 		return deasync(callback => this.lookupAuth().nodeify(callback))();
 	}
 	createEncryptionKey(keyName:string):Q.Promise<void>{
