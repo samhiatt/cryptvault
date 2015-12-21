@@ -31,6 +31,16 @@ export interface EncryptResult extends VaultResponse {
 export interface DecryptResult extends VaultResponse {
 	data: { plaintext: string };
 }
+export interface EncryptKey extends VaultResponse {
+	data: {
+		name:string;
+		cipher_mode: string;
+		deletion_allowed: boolean;
+		derived: boolean;
+		keys:{[key:string]:number};
+		min_decryption_version: number;
+	}
+}
 export interface VaultStatus {
 	sealed:boolean;
 	n:number; //total number of keys
@@ -91,6 +101,7 @@ export interface AddPolicyOpts {
 	name:string;
 }
 export interface AuthObj {
+	id:string;
 	client_token:string;
 	lease_duration:number;
 	metadata:any;

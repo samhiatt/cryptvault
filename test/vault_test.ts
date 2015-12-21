@@ -14,6 +14,8 @@ import {AuthDict} from "../vault";
 import {AuthObj} from "../vault";
 import {AddPolicyOpts} from "../vault";
 import {PolicyDict} from "../vault";
+import {EncryptKey} from "../vault";
+import fs = require('fs');
 var expect:ExpectStatic = chai.expect;
 chai.use(chaiAsPromised);
 
@@ -159,13 +161,23 @@ describe('VaultDevServer', ()=> {
 			return expect(vault.isTransitMountedSync()).to.be.true;
 		});
 		it('tests get and write policies',()=>{
-			console.log("Write policy:",vault.writePolicySync('foo',{
-				'*':{policy:'deny'},
-				'/mount/transit/foo':{policy:"write"}
-			}));
+			console.log("Write policy:",vault.writePolicySync('foo',
+				//'path "transit/keys/foo" { policy = "write" } path "secret/foo/*" {policy="write"} '
+				{
+					'transit/decrypt/foo': {policy: "write"},
+					'transit/encrypt/foo': {policy: "write"},
+					'secret/foo/*': {policy: "write"},
+					//'*': {policy: 'deny'}
+				}
+			));
 			console.log("foo policy:",vault.getPolicySync('foo'));
+			console.log("default policy:",vault.getPolicySync('default'));
 			var token = vault.createTokenSync({policies:['foo']});
 			console.log("TOKEN:",token);
+			//vault['_vault'].token=token.client_token;
+			//console.log("AUTH LOOKUP:",vault.lookupAuthSync());
+			//console.log("Renewed token:",vault.renewTokenSync());
+			//expect(vault.createEncryptionKeySync('foo')).to.be.a('boolean');
 		});
 		it('tests enableAuthSync("github"), then checks result with authsSync()',()=>{
 			expect(vault.enableAuthSync('github')).to.be.true;
@@ -210,14 +222,16 @@ describe('VaultDevServer', ()=> {
 		});
 		// TODO: Test that policies are enforced
 		it('tests async encryption functions',()=>{
-			var response = vault.createEncryptionKeySync('bar');
-			console.log("Create encryption key response:", response);
-			var key = vault.getEncryptionKeySync('bar');
+			vault.createEncryptionKeySync('bar');
+			var key:EncryptKey = vault.getEncryptionKeySync('bar');
 			console.log("Get encryption key response:", key);
-			var cipherText = vault.encryptSync('bar',testString);
+			expect(key.data).to.be.an('object');
+			expect(key.data.cipher_mode).to.equal('aes-gcm');
+			expect(key.data.keys['1']).to.be.a('number');
+			var cipherText:string = vault.encryptSync('bar',testString);
 			console.log("Encrypted:", cipherText);
 			expect(cipherText).to.be.a('string');
-			var decrypted = vault.decryptSync('bar', cipherText);
+			var decrypted:string = vault.decryptSync('bar', cipherText);
 			console.log("Decrypted:", decrypted);
 			expect(decrypted).to.be.equal(testString);
 		});

@@ -11,6 +11,7 @@ import {Vault, VaultStatus, Initialized, MountOpts, VaultAuth, AuthDict, Disable
 	PolicyDict, AddPolicyOpts, AuthObj, AuthResponse, EnableAuthOpts, PoliciesResponse,
 	CreateTokenOpts, RenewTokenOpts, DecryptOpts, EncryptOpts, CreateEncryptionKeyOpts, LookupAuthResponse, 
 	AuthenticateAppOpts, InitOpts, InitResponse, UnsealOpts, UnsealResponse} from "./vault";
+import {EncryptKey} from "./vault";
 
 export class CryptVault {
 	protected _vault:Vault;
@@ -128,15 +129,15 @@ export class CryptVault {
 		return deasync(callback => this.auths().nodeify(callback))();
 	}
 	getPolicy(name:string):Q.Promise<PolicyDict>{
-		return Q.nbind(this._vault.read,this._vault)("/sys/policy/"+name);
+		return Q.nbind(this._vault.read,this._vault)("sys/policy/"+name);
 	}
 	getPolicySync(name:string):PolicyDict{
 		return deasync(callback => this.getPolicy(name).nodeify(callback))();
 	}
-	writePolicy(name:string, policy:PolicyDict):Q.Promise<void>{
-		var policyOpts:AddPolicyOpts = {
+	writePolicy(name:string, policy:PolicyDict|string):Q.Promise<void>{
+		var policyOpts:any = {
 			name: name,
-			rules:JSON.stringify(policy)
+			rules:(typeof policy == 'string')? policy : JSON.stringify({path:policy}) 
 		};
 		return Q.nbind(this._vault.addPolicy,this._vault)({json:policyOpts})
 			.catch((err:Error)=>{
@@ -144,7 +145,7 @@ export class CryptVault {
 			throw err;
 		});
 	}
-	writePolicySync(name:string, policy:PolicyDict):void{
+	writePolicySync(name:string, policy:PolicyDict|string):void{
 		return deasync(callback => this.writePolicy(name,policy).nodeify(callback))();
 	}
 	removePolicy(name:string):Q.Promise<void>{
@@ -209,20 +210,20 @@ export class CryptVault {
 		return Q.nbind(this._vault.read,this._vault)('auth/token/lookup-self',{})
 			.then((result:LookupAuthResponse)=>result.data);
 	}
-	lookupAuthSync():any{
+	lookupAuthSync():AuthObj{
 		return deasync(callback => this.lookupAuth().nodeify(callback))();
 	}
-	createEncryptionKey(keyName:string):Q.Promise<any>{
+	createEncryptionKey(keyName:string):Q.Promise<void>{
 		var opts:CreateEncryptionKeyOpts = {value:true};
 		return Q.nbind(this._vault.write,this._vault)('transit/keys/'+keyName,opts);
 	}
-	createEncryptionKeySync(keyName:string):any{
+	createEncryptionKeySync(keyName:string):void{
 		return deasync(callback => this.createEncryptionKey(keyName).nodeify(callback))();
 	}
-	getEncryptionKey(keyName:string):Q.Promise<any>{
+	getEncryptionKey(keyName:string):Q.Promise<EncryptResult>{
 		return Q.nbind(this._vault.read,this._vault)('transit/keys/'+keyName);
 	}
-	getEncryptionKeySync(keyName:string):any{
+	getEncryptionKeySync(keyName:string):EncryptKey{
 		return deasync(callback => this.getEncryptionKey(keyName).nodeify(callback))();
 	}
 	encrypt(keyName:string, plaintext:string):Q.Promise<string>{
@@ -230,7 +231,7 @@ export class CryptVault {
 		return Q.nbind(this._vault.write,this._vault)('transit/encrypt/'+keyName,opts)
 			.then((result:EncryptResult)=>result.data.ciphertext);
 	}
-	encryptSync(keyName:string, plaintext:string):any{
+	encryptSync(keyName:string, plaintext:string):string{
 		return deasync(callback => this.encrypt(keyName,plaintext).nodeify(callback))();
 	}
 	decrypt(keyName:string, ciphertext:string):Q.Promise<string>{
@@ -238,7 +239,7 @@ export class CryptVault {
 		return Q.nbind(this._vault.write,this._vault)('transit/decrypt/'+keyName,opts)
 			.then((result:DecryptResult)=>Base64.decode(result.data.plaintext));
 	}
-	decryptSync(keyName:string, ciphertext:string):any{
+	decryptSync(keyName:string, ciphertext:string):string{
 		return deasync(callback => this.decrypt(keyName,ciphertext).nodeify(callback))();
 	}
 }
@@ -319,6 +320,6 @@ export class VaultDevServer {
 		});
 	}
 	shutdown():void{
-		this._vaultProcess.kill("SIGTERM");
+		if (this._vaultProcess) this._vaultProcess.kill("SIGTERM");
 	}
 }
