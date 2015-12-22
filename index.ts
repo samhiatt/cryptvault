@@ -10,10 +10,7 @@ import {EventEmitter} from "events";
 import {Vault, VaultStatus, Initialized, MountOpts, VaultAuth, AuthDict, DisableAuthOpts, AppIdAuthOpts, 
 	PolicyRules, PolicyObject, AddPolicyOpts, AuthObj, AuthResponse, EnableAuthOpts, PoliciesResponse, AppUserIdAuthOpts,
 	CreateTokenOpts, RenewTokenOpts, DecryptOpts, EncryptOpts, CreateEncryptionKeyOpts, LookupAuthResponse, 
-	AuthenticateAppOpts, InitOpts, InitResponse, UnsealOpts, UnsealResponse} from "./vault";
-import {EncryptKey} from "./vault";
-import {TokenObj} from "./vault";
-import {TokenObj} from "./vault";
+	AuthenticateAppOpts, InitOpts, InitResponse, UnsealOpts, UnsealResponse, TokenObj, EncryptKey } from "./vault";
 
 export class CryptVault {
 	protected _vault:Vault;

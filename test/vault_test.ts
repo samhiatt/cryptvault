@@ -1,27 +1,18 @@
 import Promise = Q.Promise;
-var assert = require('assert');
-import {VaultStatus} from "../vault";
+import {AuthDict, VaultStatus, AuthObj, AddPolicyOpts, PolicyRules, EncryptKey, PolicyObject, TokenObj } 
+	from "../vault";
 import {CryptVault} from "../index";
 import {ChildProcess} from "child_process";
 
 import cryptvault = require('../');
-var VaultDevServer = cryptvault.VaultDevServer;
 
+import fs = require('fs');
 import chai = require("chai");
 import chaiAsPromised = require("chai-as-promised");
-import ExpectStatic = Chai.ExpectStatic;
-import {AuthDict} from "../vault";
-import {AuthObj} from "../vault";
-import {AddPolicyOpts} from "../vault";
-import {PolicyRules} from "../vault";
-import {EncryptKey} from "../vault";
-import fs = require('fs');
-import {PolicyObject} from "../vault";
-import {TokenObj} from "../vault";
-var expect:ExpectStatic = chai.expect;
+var expect:Chai.ExpectStatic = chai.expect;
 chai.use(chaiAsPromised);
 
-var vaultServer = new VaultDevServer();
+var vaultServer = new cryptvault.VaultDevServer();
 var vault: CryptVault;
 var testString = 'the quick brown fox';
 
